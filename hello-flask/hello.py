@@ -15,7 +15,7 @@ class Person(db.Model):
         return f'<Person ID: {self.id}, Name: {self.name}>'
 
 db.create_all()
-
+# back date sekof streak lol
 @app.route('/')
 def index():
     person = Person.query.first()

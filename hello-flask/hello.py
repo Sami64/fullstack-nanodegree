@@ -19,4 +19,4 @@ db.create_all()
 @app.route('/')
 def index():
     person = Person.query.first()
-    return 'Hello ' + person.name
+    return 'Yooo Streak ' + person.name

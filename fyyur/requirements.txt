@@ -4,3 +4,4 @@ flask-moment==1.0.4
 flask-wtf==1.0.1
 psycopg2-binary==2.9.3
 flask_sqlalchemy==2.5.1
+phonenumbers==8.12.53

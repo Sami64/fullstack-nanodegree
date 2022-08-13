@@ -8,12 +8,12 @@ from logging import Formatter, FileHandler
 
 import babel
 import dateutil.parser
-from flask import Flask, render_template, request, flash, redirect, url_for
+from flask import Flask, render_template, request, flash, redirect, url_for, jsonify
 from flask_migrate import Migrate
 from flask_moment import Moment
-from flask_sqlalchemy import SQLAlchemy
 
 from forms import *
+from models import db, Venue, Show, Artist
 
 # ----------------------------------------------------------------------------#
 # App Config.
@@ -22,63 +22,9 @@ from forms import *
 app = Flask(__name__)
 moment = Moment(app)
 app.config.from_object('config')
-db = SQLAlchemy(app)
+db.init_app(app)
 migrate = Migrate(app, db)
 
-
-# ----------------------------------------------------------------------------#
-# Models.
-# ----------------------------------------------------------------------------#
-
-class Venue(db.Model):
-    __tablename__ = 'Venue'
-
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String)
-    city = db.Column(db.String(120))
-    state = db.Column(db.String(120))
-    address = db.Column(db.String(120))
-    phone = db.Column(db.String(120))
-    image_link = db.Column(db.String(500))
-    facebook_link = db.Column(db.String(120))
-    genres = db.Column(db.ARRAY(db.String))
-    website_link = db.Column(db.String(120))
-    seeking_talent = db.Column(db.Boolean, default=False)
-    seeking_description = db.Column(db.String)
-    shows = db.relationship('Show', backref='venue')
-
-    # TODO: implement any missing fields, as a database migration using Flask-Migrate
-
-
-class Artist(db.Model):
-    __tablename__ = 'Artist'
-
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String)
-    city = db.Column(db.String(120))
-    state = db.Column(db.String(120))
-    phone = db.Column(db.String(120))
-    genres = db.Column(db.ARRAY(db.String))
-    image_link = db.Column(db.String(500))
-    facebook_link = db.Column(db.String(120))
-    website_link = db.Column(db.String(120))
-    seeking_venue = db.Column(db.Boolean, default=False)
-    seeking_description = db.Column(db.String)
-    shows = db.relationship('Show', backref='artist')
-
-    # TODO: implement any missing fields, as a database migration using Flask-Migrate
-
-
-class Show(db.Model):
-    __tablename__ = 'Show'
-
-    id = db.Column(db.Integer, primary_key=True)
-    start_time = db.Column(db.DateTime)
-    artist_id = db.Column(db.Integer, db.ForeignKey('Artist.id'), nullable=False)
-    venue_id = db.Column(db.Integer, db.ForeignKey('Venue.id'), nullable=False)
-
-
-# TODO Implement Show and Artist models, and complete all model relationships and properties, as a database migration.
 
 # ----------------------------------------------------------------------------#
 # Filters.
@@ -105,9 +51,9 @@ def index():
     return render_template('pages/home.html')
 
 
-#  Venues
-#  ----------------------------------------------------------------
-
+# #  Venues
+# #  ----------------------------------------------------------------
+#
 @app.route('/venues')
 def venues():
     venues_query = Venue.query.all()
@@ -137,22 +83,40 @@ def venues():
         # append new venue
         venues_grouped.append({'city': group[0].city, 'state': group[0].state, 'venues': venues_group})
 
-    return render_template('pages/venues.html', areas=venues_grouped);
+    return render_template('pages/venues.html', areas=venues_grouped)
 
 
 @app.route('/venues/search', methods=['POST'])
 def search_venues():
-    # TODO: implement search on venues with partial string search. Ensure it is case-insensitive.
-    # seach for Hop should return "The Musical Hop".
-    # search for "Music" should return "The Musical Hop" and "Park Square Live Music & Coffee"
+    # retrieve search term
+    term = request.form['search_term']
+    # retrieve venue search result
+    venues_search = Venue.query.filter(Venue.name.ilike('%' + term + '%')).all()
+    response_venues = []
+
+    # generate response object
+    for venue in venues_search:
+        num_upcoming_shows = 0
+        # get upcoming shows
+        for venue_show in venue.shows:
+            if venue_show.start_time > datetime.today():
+                num_upcoming_shows += 1
+
+        # prepare venue response
+        data = {
+            'id': venue.id,
+            'name': venue.name,
+            'num_upcoming_shows': num_upcoming_shows
+        }
+
+        # append to response data field
+        response_venues.append(data)
+
     response = {
-        "count": 1,
-        "data": [{
-            "id": 2,
-            "name": "The Dueling Pianos Bar",
-            "num_upcoming_shows": 0,
-        }]
+        "count": len(venues_search),
+        "data": response_venues
     }
+
     return render_template('pages/search_venues.html', results=response,
                            search_term=request.form.get('search_term', ''))
 
@@ -239,12 +203,21 @@ def create_venue_submission():
 
 @app.route('/venues/<venue_id>', methods=['DELETE'])
 def delete_venue(venue_id):
-    # TODO: Complete this endpoint for taking a venue_id, and using
-    # SQLAlchemy ORM to delete a record. Handle cases where the session commit could fail.
+    error = False
+    try:
+        # delete record
+        Venue.query.filter_by(id=venue_id).delete()
+        # make update to database
+        db.session.commit()
+    except:
+        error = True
+        db.session.rollback()
+    finally:
+        db.session.close()
+    if error:
+        flash('😞  The Venue has historic shows. We just cannot delete it.')
 
-    # BONUS CHALLENGE: Implement a button to delete a Venue on a Venue Page, have it so that
-    # clicking that button delete it from the db then redirect the user to the homepage
-    return None
+    return jsonify({'success': True})
 
 
 #  Artists
@@ -259,16 +232,33 @@ def artists():
 
 @app.route('/artists/search', methods=['POST'])
 def search_artists():
-    # TODO: implement search on artists with partial string search. Ensure it is case-insensitive.
-    # seach for "A" should return "Guns N Petals", "Matt Quevado", and "The Wild Sax Band".
-    # search for "band" should return "The Wild Sax Band".
+    # retrieve search term
+    term = request.form['search_term']
+    # retrieve venue search result
+    artists_search = Artist.query.filter(Artist.name.ilike('%' + term + '%')).all()
+    response_artists = []
+
+    # generate response object
+    for artist in artists_search:
+        num_upcoming_shows = 0
+        # get upcoming shows
+        for artist_show in artist.shows:
+            if artist_show.start_time > datetime.today():
+                num_upcoming_shows += 1
+
+        # prepare venue response
+        data = {
+            'id': artist.id,
+            'name': artist.name,
+            'num_upcoming_shows': num_upcoming_shows
+        }
+
+        # append to response data field
+        response_artists.append(data)
+
     response = {
-        "count": 1,
-        "data": [{
-            "id": 4,
-            "name": "Guns N Petals",
-            "num_upcoming_shows": 0,
-        }]
+        "count": len(artists_search),
+        "data": response_artists
     }
     return render_template('pages/search_artists.html', results=response,
                            search_term=request.form.get('search_term', ''))
@@ -428,10 +418,6 @@ def create_artist_submission():
     else:
         flash('An error occured. Artist ' + form.name.data + ' could not be listed')
 
-    # on successful db insert, flash success
-    # flash('Artist ' + request.form['name'] + ' was successfully listed!')
-    # TODO: on unsuccessful db insert, flash an error instead.
-    # e.g., flash('An error occurred. Artist ' + data.name + ' could not be listed.')
     return render_template('pages/home.html')
 
 

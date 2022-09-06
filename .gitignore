@@ -164,6 +164,4 @@ trivia-api/frontend/node_modules
 *.zip
 *.pdf
 cd0037-API-Development-and-Documentation-project-main
-hello-flask
-psycopg2-basics
 

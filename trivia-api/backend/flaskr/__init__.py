@@ -136,15 +136,27 @@ def create_app(test_config=None):
         new_answer = body.get("answer", None)
         new_category = body.get("category", None)
         new_difficulty = body.get("difficulty", None)
+        search_term = body.get("searchTerm", None)
 
         try:
-            question = Question(question=new_question, answer=new_answer, category=new_category, difficulty=new_difficulty)
-            question.insert()
+            if search_term:
+                search_results = Question.query.order_by(Question.id).filter(Question.question.ilike("%{}%".format(search_term)))
+                results = paginate_questions(request, search_results)
 
-            return jsonify({
-                "success": True,
-                "created": question.id
-            })
+                return jsonify({
+                    "questions": results,
+                    "totalQuestions": len(results),
+                    "currentCategory": None
+                })
+
+            else:
+                question = Question(question=new_question, answer=new_answer, category=new_category, difficulty=new_difficulty)
+                question.insert()
+
+                return jsonify({
+                    "success": True,
+                    "created": question.id
+                })
         except:
             abort(422)
 
@@ -192,6 +204,31 @@ def create_app(test_config=None):
     one question at a time is displayed, the user is allowed to answer
     and shown whether they were correct or not.
     """
+    @app.route('/quizzes', methods=['POST'])
+    def retrieve_quiz_questions():
+        body = request.get_json()
+
+        previous_questions = body.get("previous_questions", None)
+        quiz_category = body.get("quiz_category", None)
+
+        if quiz_category['id'] == 0:
+            questions = Question.query.all()
+        else:
+            questions = Question.query.filter(Question.category == quiz_category['id']).all()
+
+        questions = [question.format() for question in questions]
+        questions = [question for question in questions if question['id'] not in previous_questions]
+
+        if len(questions) == 0:
+            return jsonify({
+                "question": None
+            })
+
+        question = random.choice(questions)
+
+        return jsonify({
+            "question": question
+        })
 
     """
     @TODO:

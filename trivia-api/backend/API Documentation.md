@@ -3,10 +3,13 @@
 ## API Reference
 
 ### Getting Started
+
 - Base URL: Access API endpoints on the localhost - `http://127.0.0.1:5000`
 
 ### Error Response
+
 All errors from api calls return a JSON object on the form below
+
 ```
 {
 "success": False,
@@ -16,11 +19,16 @@ All errors from api calls return a JSON object on the form below
 ```
 
 ### Endpoints
+
 #### GET /categories
-- Fetches a dictionary of categories in which the keys are the ids and the value is the corresponding string of the category
+
+- Fetches a dictionary of categories in which the keys are the ids and the value is the corresponding string of the
+  category
 - Request Arguments: None
 - Returns: An object with a single key, categories, that contains an object of id: category_string key:value pairs.
+
 ##### Example Response
+
 ```
 {
 'categories': { '1' : "Science",
@@ -33,10 +41,14 @@ All errors from api calls return a JSON object on the form below
 ```
 
 #### GET /questions?page={integer}
+
 - Fetches a paginated set of questions, a total number of questions, all categories and current category string.
 - Request Arguments: page - `integer`
-- Returns: An object with 10 paginated questions, total questions, object including all categories, and current category string
+- Returns: An object with 10 paginated questions, total questions, object including all categories, and current category
+  string
+
 ##### Example Response
+
 ```
 {
     'questions': [
@@ -61,10 +73,13 @@ All errors from api calls return a JSON object on the form below
 ```
 
 #### GET /categories/${id}/questions
+
 - Fetch questions for a category specified by id request argument
 - Request Arguments: id - `integer`
 - Returns: An object with questions for the specified category, total questions, and current category string
+
 ##### Example Response
+
 ```
 {
     'questions': [
@@ -82,10 +97,13 @@ All errors from api calls return a JSON object on the form below
 ```
 
 #### DELETE /question/${id}
+
 - Deletes a specified question using the id of the question
 - Request Arguments: id - `integer`
 - Returns: An object with fields success and id of deleted question
+
 ##### Example Response
+
 ```
 {
  "success": True,
@@ -94,8 +112,11 @@ All errors from api calls return a JSON object on the form below
 ```
 
 #### POST /quizzes
+
 - Post request in order to get next question
+
 ##### Example Request
+
 ```
 {
     'previous_questions': [1, 4, 20, 15]
@@ -104,6 +125,7 @@ All errors from api calls return a JSON object on the form below
 ```
 
 ##### Example Response
+
 ```
 {
     'question': {
@@ -117,9 +139,12 @@ All errors from api calls return a JSON object on the form below
 ```
 
 #### POST /questions
+
 - Sends a post request to create a new question
 - Returns: Returns an object with field success and created question id field
+
 ##### Example Request
+
 ```
 {
     'question':  'Heres a new question string',
@@ -130,6 +155,7 @@ All errors from api calls return a JSON object on the form below
 ```
 
 ##### Example Response
+
 ```
 {
 'success': True,
@@ -138,9 +164,12 @@ All errors from api calls return a JSON object on the form below
 ```
 
 #### POST /questions
+
 - Sends a post request to search questions by search term
 - Returns: Returns an object with field questions and another for totalQuestions and final for current category
+
 ##### Example Request
+
 ```
 {
     'searchTerm': 'who is'
@@ -148,6 +177,7 @@ All errors from api calls return a JSON object on the form below
 ```
 
 ##### Example Response
+
 ```
 {
 "questions": results,

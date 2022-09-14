@@ -25,11 +25,11 @@ class QuizView extends Component {
       type: 'GET',
       success: (result) => {
         this.setState({ categories: result.categories });
-        return;
+
       },
       error: (error) => {
         alert('Unable to load categories. Please try your request again');
-        return;
+
       },
     });
   }
@@ -69,11 +69,11 @@ class QuizView extends Component {
           guess: '',
           forceEnd: result.question ? false : true,
         });
-        return;
+
       },
       error: (error) => {
         alert('Unable to load question. Please try your request again');
-        return;
+
       },
     });
   };

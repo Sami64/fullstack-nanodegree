@@ -1,13 +1,12 @@
-import os
-from operator import itemgetter
-
-from flask import Flask, request, abort, jsonify
-from flask_sqlalchemy import SQLAlchemy
-from flask_cors import CORS
 import random
+
+from dotenv import load_dotenv
+from flask import Flask, request, abort, jsonify
+from flask_cors import CORS
 
 from backend.models import setup_db, Question, Category
 
+load_dotenv()
 QUESTIONS_PER_PAGE = 10
 
 
@@ -128,6 +127,7 @@ def create_app(test_config=None):
     the form will clear and the question will appear at the end of the last page
     of the questions list in the "List" tab.
     """
+
     @app.route('/questions', methods=['POST'])
     def create_question():
         body = request.get_json()
@@ -140,7 +140,8 @@ def create_app(test_config=None):
 
         try:
             if search_term:
-                search_results = Question.query.order_by(Question.id).filter(Question.question.ilike("%{}%".format(search_term)))
+                search_results = Question.query.order_by(Question.id).filter(
+                    Question.question.ilike("%{}%".format(search_term)))
                 results = paginate_questions(request, search_results)
 
                 return jsonify({
@@ -150,7 +151,8 @@ def create_app(test_config=None):
                 })
 
             else:
-                question = Question(question=new_question, answer=new_answer, category=new_category, difficulty=new_difficulty)
+                question = Question(question=new_question, answer=new_answer, category=new_category,
+                                    difficulty=new_difficulty)
                 question.insert()
 
                 return jsonify({
@@ -179,6 +181,7 @@ def create_app(test_config=None):
     categories in the left column will cause only questions of that
     category to be shown.
     """
+
     @app.route('/categories/<int:category_id>/questions')
     def retrieve_category_questions(category_id):
         results = Question.query.filter(Question.category == category_id).all()
@@ -204,6 +207,7 @@ def create_app(test_config=None):
     one question at a time is displayed, the user is allowed to answer
     and shown whether they were correct or not.
     """
+
     @app.route('/quizzes', methods=['POST'])
     def retrieve_quiz_questions():
         body = request.get_json()
@@ -221,7 +225,8 @@ def create_app(test_config=None):
 
         if len(questions) == 0:
             return jsonify({
-                "question": None
+                "question": None,
+                "code": 404
             })
 
         question = random.choice(questions)

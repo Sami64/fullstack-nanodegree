@@ -31,11 +31,11 @@ class QuestionView extends Component {
           categories: result.categories,
           currentCategory: result.current_category,
         });
-        return;
+
       },
       error: (error) => {
         alert('Unable to load questions. Please try your request again');
-        return;
+
       },
     });
   };
@@ -73,11 +73,11 @@ class QuestionView extends Component {
           totalQuestions: result.total_questions,
           currentCategory: result.current_category,
         });
-        return;
+
       },
       error: (error) => {
         alert('Unable to load questions. Please try your request again');
-        return;
+
       },
     });
   };
@@ -99,11 +99,11 @@ class QuestionView extends Component {
           totalQuestions: result.total_questions,
           currentCategory: result.current_category,
         });
-        return;
+
       },
       error: (error) => {
         alert('Unable to load questions. Please try your request again');
-        return;
+
       },
     });
   };
@@ -119,7 +119,7 @@ class QuestionView extends Component {
           },
           error: (error) => {
             alert('Unable to load questions. Please try your request again');
-            return;
+
           },
         });
       }
